@@ -1,3 +1,4 @@
+from abc import ABCMeta
 from multiprocessing import cpu_count
 from concurrent.futures import ThreadPoolExecutor
 
@@ -34,6 +35,9 @@ class ServicePool(object):
                                    environment)
     :type   aws_secret_access_key: string
     """
+    __meta__ = ABCMeta
+
+
     _boto_module_name = 'boto'
     _aws_module_name = None
 
@@ -53,7 +57,7 @@ class ServicePool(object):
             )
 
         # Once every connection futures have been spawned, let's
-        # eval them.
+        # eval them and set a related attribute according to it.
         for region, future in future_connections.iteritems():
             setattr(self, region.replace("-", "_"), future.result())
 
@@ -108,7 +112,7 @@ class ServiceMixinPool(object):
 
     ::code-block: python
         class MyPool(ServiceMixinPool):
-            _services = ['ec2', 's3', 'sqs']
+            _service_names = ['ec2', 's3', 'sqs']
 
         pool = MyPool(regions=['eu-west-1'])
         pool.ec2.eu_west_1.get_all_instances()
@@ -171,7 +175,7 @@ class ServiceMixinPool(object):
                                     environment)
         :type   aws_secret_access_key: string
         """
-        service_pool_kls = ServicePool
+        service_pool_kls = type(service_name.capitalize(), (ServicePool,), {})
         service_pool_kls._aws_module_name = service_name
 
         service_pool_instance = service_pool_kls(
@@ -180,7 +184,9 @@ class ServiceMixinPool(object):
             aws_secret_access_key=aws_secret_access_key
         )
         setattr(self, service_name, service_pool_instance)
-        self._service_names.append(service_name)
+
+        if service_name not in self._service_names:
+            self._service_names.append(service_name)
 
         return service_pool_instance
 
