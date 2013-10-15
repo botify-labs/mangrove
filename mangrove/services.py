@@ -1,101 +1,101 @@
-from mangrove.pool import ConnexionPool
+from mangrove.pool import ServicePool
 
 
-class Ec2Pool(ConnexionPool):
+class Ec2Pool(ServicePool):
     _aws_module_name = 'ec2'
 
 
-class S3Pool(ConnexionPool):
+class S3Pool(ServicePool):
     _aws_module_name = 's3'
 
 
-class EmrPool(ConnexionPool):
+class EmrPool(ServicePool):
     _aws_module_name = 'emr'
 
 
-class AutoscalePool(ConnexionPool):
+class AutoscalePool(ServicePool):
     _aws_module_name = 'autoscale'
 
 
-class DynamoDB2Pool(ConnexionPool):
+class DynamoDB2Pool(ServicePool):
     _aws_module_name = 'dynamodb2'
 
 
-class DynamoDBPool(ConnexionPool):
+class DynamoDBPool(ServicePool):
     _aws_module_name = 'dynamodb'
 
 
-class RdsPool(ConnexionPool):
+class RdsPool(ServicePool):
     _aws_module_name = 'rds'
 
 
-class ElasticachePool(ConnexionPool):
+class ElasticachePool(ServicePool):
     _aws_module_name = 'elasticache'
 
 
-class RedshiftPool(ConnexionPool):
+class RedshiftPool(ServicePool):
     _aws_module_name = 'redshift'
 
 
-class SimpleDBPool(ConnexionPool):
+class SimpleDBPool(ServicePool):
     _aws_module_name = 'sdb'
 
 
-class CloudFormationPool(ConnexionPool):
+class CloudFormationPool(ServicePool):
     _aws_module_name = 'cloudformation'
 
 
-class BeanstalkPool(ConnexionPool):
+class BeanstalkPool(ServicePool):
     _aws_module_name = 'beanstalk'
 
 
-class IamPool(ConnexionPool):
+class IamPool(ServicePool):
     _aws_module_name = 'iam'
 
 
-class StsPool(ConnexionPool):
+class StsPool(ServicePool):
     _aws_module_name = 'sts'
 
 
-class CloudSearchPool(ConnexionPool):
+class CloudSearchPool(ServicePool):
     _aws_module_name = 'cloudsearch'
 
 
-class ElasticTranscoderPool(ConnexionPool):
+class ElasticTranscoderPool(ServicePool):
     _aws_module_name = 'elastictranscoder'
 
 
-class SwfPool(ConnexionPool):
+class SwfPool(ServicePool):
     _aws_module_name = 'swf'
 
 
-class SqsPool(ConnexionPool):
+class SqsPool(ServicePool):
     _aws_module_name = 'sqs'
 
 
-class SimpleNotificationPool(ConnexionPool):
+class SimpleNotificationPool(ServicePool):
     _aws_module_name = 'sns'
 
 
-class SimpleEmailPool(ConnexionPool):
+class SimpleEmailPool(ServicePool):
     _aws_module_name = 'ses'
 
 
-class VpcPool(ConnexionPool):
+class VpcPool(ServicePool):
     _aws_module_name = 'vpc'
 
 
-class ElbPool(ConnexionPool):
+class ElbPool(ServicePool):
     _aws_module_name = 'elb'
 
 
-class GlacierPool(ConnexionPool):
+class GlacierPool(ServicePool):
     _aws_module_name = 'glacier'
 
 
-class MechanicalTurkPool(ConnexionPool):
+class MechanicalTurkPool(ServicePool):
     _aws_module_name = 'mturk'
 
 
-class SupportPool(ConnexionPool):
+class SupportPool(ServicePool):
     _aws_module_name = 'support'
