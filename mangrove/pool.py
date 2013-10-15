@@ -43,20 +43,37 @@ class ServicePool(object):
 
 
 class ServiceMixinPool(object):
-    _services = []
+    _service_names = []
 
     def __init__(self, services=None, regions=None,
                  aws_access_key_id=None, aws_secret_access_key=None):
-        services = services or self._services
+        services = services or self._service_names
 
         for service in services:
-            service_pool_kls = ServicePool
-            service_pool_kls._aws_module_name = service
-            service_pool_instance = service_pool_kls(
+            self.add_service(
+                service,
                 regions=regions,
                 aws_access_key_id=aws_access_key_id,
                 aws_secret_access_key=aws_secret_access_key
             )
 
-            setattr(self, service, service_pool_instance)
+    @property
+    def services(self):
+        return self._service_names
+
+    def add_service(self, service_name, regions=None,
+                    aws_access_key_id=None, aws_secret_access_key=None):
+        service_pool_kls = ServicePool
+        service_pool_kls._aws_module_name = service_name
+
+        service_pool_instance = service_pool_kls(
+            regions=regions,
+            aws_access_key_id=aws_access_key_id,
+            aws_secret_access_key=aws_secret_access_key
+        )
+        setattr(self, service_name, service_pool_instance)
+        self._service_names.append(service_name)
+
+        return service_pool_instance
+
 
