@@ -150,6 +150,8 @@ class ServiceMixinPool(object):
                                    environment)
     :type   aws_secret_access_key: string
     """
+    __meta__ = ABCMeta
+
     _aws_module_names = []
 
     def __init__(self, regions=None, aws_access_key_id=None, aws_secret_access_key=None):
