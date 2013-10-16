@@ -43,13 +43,13 @@ class ServicePool(object):
 
     def __init__(self, regions=None, aws_access_key_id=None, aws_secret_access_key=None):
         self.regions = regions or self._get_module_regions()
+        self._executor = ThreadPoolExecutor(max_workers=cpu_count())
 
         # For performances reasons, every regions connections are
         # made concurrently through the concurent.futures library.
         future_connections = {}
-        executor = ThreadPoolExecutor(max_workers=cpu_count())
         for region in self.regions:
-            future_connections[region] = executor.submit(
+            future_connections[region] = self._executor.submit(
                 self._connect_module_to_region,
                 region,
                 aws_access_key_id=aws_access_key_id,
@@ -149,6 +149,8 @@ class ServiceMixinPool(object):
     _aws_module_names = []
 
     def __init__(self, regions=None, aws_access_key_id=None, aws_secret_access_key=None):
+        self._executor = ThreadPoolExecutor(max_workers=cpu_count())
+
         for service in self._aws_module_names:
             self.add_service(
                 service,
