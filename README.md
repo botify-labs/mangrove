@@ -39,6 +39,11 @@ ec2_pool.us_west_1.get_all_instances()
 
 ec2_pool.us_east_1.get_all_images()
 []
+
+# Any time, you're able to add a region connection to the pool
+s3_pool.add_region('us-east-2')
+s3_pool.us_east_2
+<S3Pool us_east_2>
 ```
 
 ### Create your own service pool
@@ -59,6 +64,12 @@ class MySupperDupperPool(ServicePool):
 # subclasses
 p = MySupperDupperPool(regions=['eu-west-1', 'us-west-1'])
 p.us_west_1.botoservice_method()
+
+# As ServicePool is the base class for helpers, you can of course
+# dynamically add a region to the pool at anytime
+p.add_region('ap-southeast-1')
+p.ap_southeast_1
+<MySupperDupperPool ap_southeast_1>
 ```
 
 If the boto service you're trying to expose as a pool has a custom way to connect to a region, or

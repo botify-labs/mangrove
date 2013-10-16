@@ -96,6 +96,16 @@ class ServicePool(object):
         module = __import__(module_name, self._aws_module_name)
         return getattr(module, self._aws_module_name)
 
+    def add_region(self, region_name):
+        """Connect the pool to a new region
+
+        :param  region_name: Name of the region to connect to
+        :type   region_name: string
+        """
+        region_client = self._connect_module_to_region(region_name)
+        setattr(self, region_name.replace("-", "_"), region_client)
+        self.regions.append(region_name)
+
 
 class ServiceMixinPool(object):
     """Multiple AWS services connection pool wrapper class
