@@ -4,6 +4,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 from boto import ec2
 
+from mangrove.utils import get_boto_module
+
 
 class ServicePool(object):
     """Aws service connection pool wrapper
@@ -91,9 +93,7 @@ class ServicePool(object):
     @property
     def module(self):
         """Services boto module as property"""
-        module_name = '{}.{}'.format(self._boto_module_name, self._aws_module_name)
-        module = __import__(module_name, self._aws_module_name)
-        return getattr(module, self._aws_module_name)
+        return get_boto_module(self._aws_module_name)
 
     def add_region(self, region_name):
         """Connect the pool to a new region
