@@ -43,7 +43,8 @@ class ServicePool(object):
     _boto_module_name = 'boto'
     _aws_module_name = None
 
-    def __init__(self, regions=None, aws_access_key_id=None, aws_secret_access_key=None):
+    def __init__(self, regions=None, async=True,
+                 aws_access_key_id=None, aws_secret_access_key=None):
         self.regions = regions or self._get_module_regions()
         self.regions = set(self.regions)
         self._executor = ThreadPoolExecutor(max_workers=cpu_count())
@@ -90,13 +91,7 @@ class ServicePool(object):
 
     def _get_module_regions(self):
         """Retrieves the service's module allowed regions"""
-        try:
-            regions = [region.name for region in self.module.regions()]
-        except TypeError:
-            raise MissingMethodError("Provided service module does not expose "
-                                     "a .regions() method")
-
-        return regions
+        return [region.name for region in self.module.regions()]
 
     @property
     def module(self):
@@ -194,17 +189,11 @@ class ServiceMixinPool(object):
         service_pool_kls = type(service_name.capitalize(), (ServicePool,), {})
         service_pool_kls._aws_module_name = service_name
 
-        # If the service module expose a regions method, expose it
-        # as a ServicePool subclass instance. Otherwise expose it 
-        # directly as is (boto module).
-        try:
-            service_pool_instance = service_pool_kls(
-                regions=regions,
-                aws_access_key_id=aws_access_key_id,
-                aws_secret_access_key=aws_secret_access_key
-            )
-        except MissingMethodError:
-            service_pool_instance = get_boto_module(service_name)
+        service_pool_instance = service_pool_kls(
+            regions=regions,
+            aws_access_key_id=aws_access_key_id,
+            aws_secret_access_key=aws_secret_access_key
+        )
 
         setattr(self, service_name, service_pool_instance)
 

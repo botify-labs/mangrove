@@ -111,19 +111,4 @@ Once you instantiate your mixin pool, services you've specified will be exposed 
 ]
 ```
 
-**Nota bene**: Some services like Route53 are not regionalized. Therefor ServiceMixinPool subclasses will expose them directly as a single instance attribute.
-
-```python
->>> class Route53Ec2Pool(ServiceMixinPool):
-        _aws_module_names = [
-            'route53',
-            'ec2'
-        ]
-
->>> p = Route53Ec2Pool()
->>> p.ec2
-<ServicePool Ec2>
->>> p.route53.universal
-Route53Connection:route53.amazonaws.com
-```
 
