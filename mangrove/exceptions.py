@@ -1,0 +1,2 @@
+class MissingMethodError(Exception):
+    pass

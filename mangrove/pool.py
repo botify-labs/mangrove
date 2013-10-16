@@ -5,6 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 from boto import ec2
 
 from mangrove.utils import get_boto_module
+from mangrove.exceptions import MissingMethodError
 
 
 class ServicePool(object):
@@ -43,7 +44,8 @@ class ServicePool(object):
     _aws_module_name = None
 
     def __init__(self, regions=None, aws_access_key_id=None, aws_secret_access_key=None):
-        self.regions = set(regions) or self._get_module_regions()
+        self.regions = regions or self._get_module_regions()
+        self.regions = set(self.regions)
         self._executor = ThreadPoolExecutor(max_workers=cpu_count())
 
         # For performances reasons, every regions connections are
@@ -88,7 +90,13 @@ class ServicePool(object):
 
     def _get_module_regions(self):
         """Retrieves the service's module allowed regions"""
-        return [region.name for region in self.module.regions()]
+        try:
+            regions = [region.name for region in self.module.regions()]
+        except TypeError:
+            raise MissingMethodError("Provided service module does not expose "
+                                     "a .regions() method")
+
+        return regions
 
     @property
     def module(self):
@@ -187,11 +195,18 @@ class ServiceMixinPool(object):
         service_pool_kls = type(service_name.capitalize(), (ServicePool,), {})
         service_pool_kls._aws_module_name = service_name
 
-        service_pool_instance = service_pool_kls(
-            regions=regions,
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key
-        )
+        # If the service module expose a regions method, expose it
+        # as a ServicePool subclass instance. Otherwise expose it 
+        # directly as is (boto module).
+        try:
+            service_pool_instance = service_pool_kls(
+                regions=regions,
+                aws_access_key_id=aws_access_key_id,
+                aws_secret_access_key=aws_secret_access_key
+            )
+        except MissingMethodError:
+            service_pool_instance = get_boto_module(service_name)
+
         setattr(self, service_name, service_pool_instance)
 
         if service_name not in self.services:
