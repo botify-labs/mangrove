@@ -136,13 +136,10 @@ class ServiceMixinPool(object):
                                    environment)
     :type   aws_secret_access_key: string
     """
-    _service_names = []
+    _aws_module_names = []
 
-    def __init__(self, services=None, regions=None,
-                 aws_access_key_id=None, aws_secret_access_key=None):
-        services = services or self._service_names
-
-        for service in services:
+    def __init__(self, regions=None, aws_access_key_id=None, aws_secret_access_key=None):
+        for service in self._aws_module_names:
             self.add_service(
                 service,
                 regions=regions,
@@ -153,7 +150,7 @@ class ServiceMixinPool(object):
     @property
     def services(self):
         """Registered pool services list"""
-        return self._service_names
+        return self._aws_module_names
 
     def add_service(self, service_name, regions=None,
                     aws_access_key_id=None, aws_secret_access_key=None):
@@ -185,8 +182,8 @@ class ServiceMixinPool(object):
         )
         setattr(self, service_name, service_pool_instance)
 
-        if service_name not in self._service_names:
-            self._service_names.append(service_name)
+        if service_name not in self.services:
+            self._aws_module_names.append(service_name)
 
         return service_pool_instance
 
