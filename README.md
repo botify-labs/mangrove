@@ -12,6 +12,14 @@ Out the box boto's clients are attached to specific individual regions through t
 We needed a way to connect to multiple regions and services at once in elegant way.
 
 
+## Installation
+
+as simple as:
+
+```bash
+$ pip install pymangrove
+```
+
 ## How to use it
 
 

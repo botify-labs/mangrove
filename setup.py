@@ -10,7 +10,7 @@ root = os.path.abspath(os.path.dirname(__file__))
 version = __import__('mangrove').__version__
 
 setup(
-    name='mangrove',
+    name='pymangrove',
     version=version,
     license='MIT',
     description='a boto connexion pool',
