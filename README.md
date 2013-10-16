@@ -15,7 +15,7 @@ We needed a way to connect to multiple regions and services at once in elegant w
 ## How to use it
 
 
-### Using the services helpers class
+### Helpers
 
 Mangrove is shipped with services helpers classes to help you getting started immediately.
 They provide a transparent access to the boto classes through regions specific attributes. 
@@ -40,3 +40,32 @@ ec2_pool.us_west_1.get_all_instances()
 ec2_pool.us_east_1.get_all_images()
 []
 ```
+
+### Create your own service pool
+
+If you can't find your amazon aws service client pool listed in the ``mangrove.services`` module.
+Creating your own should be as easy as subclassing ``mangrove.pool.ServicePool``:
+
+```python
+from mangrove.pool import ServicePool
+
+class MySupperDupperPool(ServicePool):
+    # Subclassing ServicePool is as easy as setting a class
+    # attribute to the name of the related boto service class
+    # name
+    _aws_module_name = 'mysupperdupperservice'
+    
+# Then you can instantiate it and use it as any other mangrove ServicePool
+# subclasses
+p = MySupperDupperPool(regions=['eu-west-1', 'us-west-1'])
+p.us_west_1.botoservice_method()
+```
+
+If the boto service you're trying to expose as a pool has a custom way to connect to a region, or
+to list regions, feel free to override the ``_connect_module_to_region`` and ``_get_module_regions`` ServicePool methods to.
+For an example please take a look to the abstract ServicePool class implementation in ``mangrove.pool`` module.
+
+
+### Creating your own multi-services pool
+
+
