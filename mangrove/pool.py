@@ -150,10 +150,11 @@ class ServiceMixinPool(object):
 
     def __init__(self, regions=None, aws_access_key_id=None, aws_secret_access_key=None):
         self._executor = ThreadPoolExecutor(max_workers=cpu_count())
+        self._services = {}
 
-        for service in self._aws_module_names:
+        for module in self._aws_module_names:
             self.add_service(
-                service,
+                module,
                 regions=regions,
                 aws_access_key_id=aws_access_key_id,
                 aws_secret_access_key=aws_secret_access_key
@@ -162,7 +163,7 @@ class ServiceMixinPool(object):
     @property
     def services(self):
         """Registered pool services list"""
-        return self._aws_module_names
+        return self._services
 
     def add_service(self, service_name, regions=None,
                     aws_access_key_id=None, aws_secret_access_key=None):
@@ -196,7 +197,7 @@ class ServiceMixinPool(object):
 
         if service_name not in self.services:
             self._aws_module_names.append(service_name)
+            self.services[service_name] = service_pool_instance
 
         return service_pool_instance
-
 
