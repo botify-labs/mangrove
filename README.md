@@ -68,4 +68,30 @@ For an example please take a look to the abstract ServicePool class implementati
 
 ### Creating your own multi-services pool
 
+You might find usefull to create a custom pool exposing multiple services at once: *ec2*, *s3* and *sqs* for example.
+Mangrove provides a ``ServiceMixinPool`` abstract class to help you creating one. It's as simple as subclassing
+and setting a class attribute:
+
+```python
+from mangrove.pool import ServiceMixinPool
+
+class WebRelatedServicesPool(ServiceMixinPool):
+    _aws_module_names = [
+        'ec2',
+        's3',
+        'sqs
+    ]
+    
+# Once you instantiate your mixin pool, services you've specified
+# will be exposed as ServicePool instance attributes.
+mixin_pool = WebRelatedServicesPool(regions=['us_west_1', 'eu_west_1'])
+mixin_pool.s3
+<ServicePool S3>
+mixin_pool.ec2.us_west_1.get_all_instances()
+[Reservation:i76f98b,
+ Reservation:i23d4f8,
+ ...
+]
+```
+
 
