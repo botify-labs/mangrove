@@ -45,6 +45,7 @@ class ServicePool(object):
 
     def __init__(self, regions=None, async=True,
                  aws_access_key_id=None, aws_secret_access_key=None):
+        self.module = get_boto_module(self._aws_module_name)
         self.regions = regions or self._get_module_regions()
         self.regions = set(self.regions)
         self._executor = ThreadPoolExecutor(max_workers=cpu_count())
@@ -83,20 +84,12 @@ class ServicePool(object):
                                     environment)
         :type   aws_secret_access_key: string
         """
-        return self.module.connect_to_region(
-            region,
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key
-        )
+        return self.module.connect_to_region(region)
 
     def _get_module_regions(self):
         """Retrieves the service's module allowed regions"""
         return [region.name for region in self.module.regions()]
 
-    @property
-    def module(self):
-        """Services boto module as property"""
-        return get_boto_module(self._aws_module_name)
 
     def add_region(self, region_name):
         """Connect the pool to a new region
