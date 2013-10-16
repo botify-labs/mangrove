@@ -37,12 +37,11 @@ class ServicePool(object):
     """
     __meta__ = ABCMeta
 
-
     _boto_module_name = 'boto'
     _aws_module_name = None
 
     def __init__(self, regions=None, aws_access_key_id=None, aws_secret_access_key=None):
-        self.regions = regions or self._get_module_regions()
+        self.regions = set(regions) or self._get_module_regions()
         self._executor = ThreadPoolExecutor(max_workers=cpu_count())
 
         # For performances reasons, every regions connections are
@@ -104,7 +103,7 @@ class ServicePool(object):
         """
         region_client = self._connect_module_to_region(region_name)
         setattr(self, region_name.replace("-", "_"), region_client)
-        self.regions.append(region_name)
+        self.regions.add(region_name)
 
 
 class ServiceMixinPool(object):
