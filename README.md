@@ -23,26 +23,26 @@ They provide a transparent access to the boto classes through regions specific a
 For example:
 
 ```python
-from mangrove.services import Ec2Pool, S3Pool
+>>> from mangrove.services import Ec2Pool, S3Pool
 
-ec2_pool = Ec2Pool()  # As a default every regions will be connected
-s3_pool = S3Pool(regions=['us-east-1', 'us-west-1'])  # Or you can specify the one you're interested in
+>>> ec2_pool = Ec2Pool()  # As a default every regions will be connected
+>>> s3_pool = S3Pool(regions=['us-east-1', 'us-west-1'])  # Or you can specify the one you're interested in
 
 
 # Once your pool is created you can access the various regions specific
 # client through their related instance attributes. 
-ec2_pool.us_west_1.get_all_instances()
+>>> ec2_pool.us_west_1.get_all_instances()
 [Reservation:i7291b6,
  Reservation:i2e435a,
  ...
 ]
 
-ec2_pool.us_east_1.get_all_images()
+>>> ec2_pool.us_east_1.get_all_images()
 []
 
 # Any time, you're able to add a region connection to the pool
-s3_pool.add_region('us-east-2')
-s3_pool.us_east_2
+>>> s3_pool.add_region('us-east-2')
+>>> s3_pool.us_east_2
 <S3Pool us_east_2>
 ```
 
@@ -52,23 +52,27 @@ If you can't find your amazon aws service client pool listed in the ``mangrove.s
 Creating your own should be as easy as subclassing ``mangrove.pool.ServicePool``:
 
 ```python
-from mangrove.pool import ServicePool
+>>> from mangrove.pool import ServicePool
 
-class MySupperDupperPool(ServicePool):
-    # Subclassing ServicePool is as easy as setting a class
-    # attribute to the name of the related boto service class
-    # name
-    _aws_module_name = 'mysupperdupperservice'
-    
-# Then you can instantiate it and use it as any other mangrove ServicePool
-# subclasses
-p = MySupperDupperPool(regions=['eu-west-1', 'us-west-1'])
-p.us_west_1.botoservice_method()
+>>> class MySupperDupperPool(ServicePool):
+        # Subclassing ServicePool is as easy as setting a class
+        # attribute to the name of the related boto service class
+        # name
+        _aws_module_name = 'mysupperdupperservice'
+```
 
-# As ServicePool is the base class for helpers, you can of course
-# dynamically add a region to the pool at anytime
-p.add_region('ap-southeast-1')
-p.ap_southeast_1
+Then you can instantiate it and use it as any other mangrove ServicePool subclasses:
+
+```python
+>>> p = MySupperDupperPool(regions=['eu-west-1', 'us-west-1'])
+>>> p.us_west_1.botoservice_method()
+```
+
+Note that as ServicePool is the base class for helpers, you can of course dynamically add a region to the pool at anytime
+
+```python
+>>> p.add_region('ap-southeast-1')
+>>> p.ap_southeast_1
 <MySupperDupperPool ap_southeast_1>
 ```
 
@@ -84,25 +88,42 @@ Mangrove provides a ``ServiceMixinPool`` abstract class to help you creating one
 and setting a class attribute:
 
 ```python
-from mangrove.pool import ServiceMixinPool
+>>> from mangrove.pool import ServiceMixinPool
 
-class WebRelatedServicesPool(ServiceMixinPool):
-    _aws_module_names = [
-        'ec2',
-        's3',
-        'sqs
-    ]
-    
-# Once you instantiate your mixin pool, services you've specified
-# will be exposed as ServicePool instance attributes.
-mixin_pool = WebRelatedServicesPool(regions=['us_west_1', 'eu_west_1'])
-mixin_pool.s3
+>>> class WebRelatedServicesPool(ServiceMixinPool):
+        _aws_module_names = [
+            'ec2',
+            's3',
+            'sqs
+        ]
+```
+
+Once you instantiate your mixin pool, services you've specified will be exposed as ServicePool instance attributes.
+
+```python
+>>> mixin_pool = WebRelatedServicesPool(regions=['us_west_1', 'eu_west_1'])
+>>> mixin_pool.s3
 <ServicePool S3>
-mixin_pool.ec2.us_west_1.get_all_instances()
+>>> mixin_pool.ec2.us_west_1.get_all_instances()
 [Reservation:i76f98b,
  Reservation:i23d4f8,
  ...
 ]
 ```
 
+**Nota bene**: Some services like Route53 are not regionalized. Therefor ServiceMixinPool subclasses will expose them directly as a single instance attribute.
+
+```python
+>>> class Route53Ec2Pool(ServiceMixinPool):
+        _aws_module_names = [
+            'route53',
+            'ec2'
+        ]
+
+>>> p = Route53Ec2Pool()
+>>> p.ec2
+<ServicePool Ec2>
+>>> p.route53.universal
+Route53Connection:route53.amazonaws.com
+```
 

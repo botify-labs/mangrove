@@ -129,15 +129,12 @@ class ServiceMixinPool(object):
 
     ::code-block: python
         class MyPool(ServiceMixinPool):
-            _service_names = ['ec2', 's3', 'sqs']
+            _aws_module_names = ['ec2', 's3', 'sqs']
 
         pool = MyPool(regions=['eu-west-1'])
         pool.ec2.eu_west_1.get_all_instances()
         pool.s3.bucket('test')
         ...
-
-    :param  services: services to add to the mixin connection pool
-    :type   services: list of strings
 
     :param  regions: AWS regions to connect the service to as
                      a default every regions will be used.
