@@ -5,7 +5,10 @@ from concurrent.futures import ThreadPoolExecutor
 from boto import ec2
 
 from mangrove.utils import get_boto_module
-from mangrove.exceptions import MissingMethodError
+from mangrove.exceptions import (
+    MissingMethodError,
+    DoesNotExistError
+)
 
 
 class ServicePool(object):
@@ -28,6 +31,9 @@ class ServicePool(object):
                      a default every regions will be used.
     :type   regions: list of strings
 
+    :param  default_region: region to be used as a default
+    :type   default_region: string
+
     :param  aws_access_key_id: aws access key token (if not provided
                                AWS_ACCESS_KEY_ID will be fetched from
                                environment)
@@ -43,7 +49,7 @@ class ServicePool(object):
     _boto_module_name = 'boto'
     _aws_module_name = None
 
-    def __init__(self, regions=None, async=True,
+    def __init__(self, regions=None, default_region=None, async=True,
                  aws_access_key_id=None, aws_secret_access_key=None):
         self.module = get_boto_module(self._aws_module_name)
         self._executor = ThreadPoolExecutor(max_workers=cpu_count())
@@ -51,6 +57,7 @@ class ServicePool(object):
 
         self._regions = regions or self._get_module_regions()
         self._regions = set(self.regions)
+        self.default_region = default_region
 
         # For performances reasons, every regions connections are
         # made concurrently through the concurent.futures library.
@@ -105,6 +112,32 @@ class ServicePool(object):
         """
         return self._connections[region_name]
 
+    @property
+    def default_region(self):
+        if not hasattr(self, '_default_region_name'):
+            self._default_region_name = None
+
+        if self._default_region_name is not None:
+            if not self._default_region_name in self._connections:
+                raise DoesNotExistError(
+                    "No connection disposable connection to {} region. "
+                    "you might want to set it using .add_region method "
+                    "before setting default_region".format(self._default_region_name)
+                )
+        else:
+            return None
+
+        return self._connections[self._default_region_name]
+
+    @default_region.setter
+    def default_region(self, value):
+        if value is not None and not value in self.regions:
+            raise DoesNotExistError(
+                    "Cannot set default region to {}. "
+                    "Please make sure you've added it to the pool".format(value)
+            )
+
+        self._default_region_name = value
 
     def add_region(self, region_name):
         """Connect the pool to a new region
