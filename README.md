@@ -14,7 +14,7 @@ We needed a way to connect to multiple regions and services at once in elegant w
 
 ## Installation
 
-as simple as:
+it's as simple as:
 
 ```bash
 $ pip install pymangrove
@@ -31,10 +31,11 @@ They provide a transparent access to the boto classes through regions specific a
 For example:
 
 ```python
->>> from mangrove.services import Ec2Pool, S3Pool
+>>> from mangrove.services import Ec2Pool, S3Pool, SqsPool
 
 >>> ec2_pool = Ec2Pool()  # As a default every regions will be connected
->>> s3_pool = S3Pool(regions=['us-east-1', 'us-west-1'])  # Or you can specify the one you're interested in
+>>> s3_pool = S3Pool(regions=['us-east-1', 'us-west-1'])  # But you can specify the one you're interested in
+>>> sqs_pool = SqsPool(default_region='us-east-1')  # And, you can set a default region to be used later on
 
 
 # Once your pool is created you can access the various regions specific
@@ -44,8 +45,11 @@ For example:
  Reservation:i2e435a,
  ...
 ]
-
 >>> ec2_pool.region('us_east_1').get_all_images()
+[]
+
+# If you've set a default_region, you might access it directly.
+>>> sqs_pool.default_region.get_all_queues()
 []
 
 # Any time, you're able to add a region connection to the pool
