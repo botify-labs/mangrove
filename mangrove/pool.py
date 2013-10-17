@@ -49,8 +49,8 @@ class ServicePool(object):
         self._executor = ThreadPoolExecutor(max_workers=cpu_count())
         self._connections = {}
 
-        self.regions = regions or self._get_module_regions()
-        self.regions = set(self.regions)
+        self._regions = regions or self._get_module_regions()
+        self._regions = set(self.regions)
 
         # For performances reasons, every regions connections are
         # made concurrently through the concurent.futures library.
@@ -93,6 +93,10 @@ class ServicePool(object):
         """Retrieves the service's module allowed regions"""
         return [region.name for region in self.module.regions()]
 
+    @property
+    def regions(self):
+        return self._regions
+
     def region(self, region_name):
         """Access a pools specific region connections
 
@@ -110,8 +114,7 @@ class ServicePool(object):
         """
         region_client = self._connect_module_to_region(region_name)
         self._connections[region_name] = region_client
-        self.regions.add(region_name)
-
+        self._regions.add(region_name)
 
 class ServiceMixinPool(object):
     """Multiple AWS services connection pool wrapper class
