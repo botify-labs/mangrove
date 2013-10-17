@@ -38,19 +38,19 @@ For example:
 
 
 # Once your pool is created you can access the various regions specific
-# client through their related instance attributes. 
->>> ec2_pool.us_west_1.get_all_instances()
+# client through the .region method.
+>>> ec2_pool.region('us_west_1').get_all_instances()
 [Reservation:i7291b6,
  Reservation:i2e435a,
  ...
 ]
 
->>> ec2_pool.us_east_1.get_all_images()
+>>> ec2_pool.region('us_east_1').get_all_images()
 []
 
 # Any time, you're able to add a region connection to the pool
 >>> s3_pool.add_region('us-east-2')
->>> s3_pool.us_east_2
+>>> s3_pool.region('us_east_2')
 <S3Pool us_east_2>
 ```
 
@@ -73,14 +73,14 @@ Then you can instantiate it and use it as any other mangrove ServicePool subclas
 
 ```python
 >>> p = MySupperDupperPool(regions=['eu-west-1', 'us-west-1'])
->>> p.us_west_1.botoservice_method()
+>>> p.region('us_west_1').botoservice_method()
 ```
 
 Note that as ServicePool is the base class for helpers, you can of course dynamically add a region to the pool at anytime
 
 ```python
 >>> p.add_region('ap-southeast-1')
->>> p.ap_southeast_1
+>>> p.region('ap_southeast_1')
 <MySupperDupperPool ap_southeast_1>
 ```
 
@@ -112,7 +112,7 @@ Once you instantiate your mixin pool, services you've specified will be exposed 
 >>> mixin_pool = WebRelatedServicesPool(regions=['us_west_1', 'eu_west_1'])
 >>> mixin_pool.s3
 <ServicePool S3>
->>> mixin_pool.ec2.us_west_1.get_all_instances()
+>>> mixin_pool.ec2.region('us_west_1').get_all_instances()
 [Reservation:i76f98b,
  Reservation:i23d4f8,
  ...

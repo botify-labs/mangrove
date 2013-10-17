@@ -46,9 +46,11 @@ class ServicePool(object):
     def __init__(self, regions=None, async=True,
                  aws_access_key_id=None, aws_secret_access_key=None):
         self.module = get_boto_module(self._aws_module_name)
+        self._executor = ThreadPoolExecutor(max_workers=cpu_count())
+        self._connections = {}
+
         self.regions = regions or self._get_module_regions()
         self.regions = set(self.regions)
-        self._executor = ThreadPoolExecutor(max_workers=cpu_count())
 
         # For performances reasons, every regions connections are
         # made concurrently through the concurent.futures library.
@@ -62,9 +64,10 @@ class ServicePool(object):
             )
 
         # Once every connection futures have been spawned, let's
-        # eval them and set a related attribute according to it.
+        # eval them and set a related key in connections store
+        # according to it.
         for region, future in future_connections.iteritems():
-            setattr(self, region.replace("-", "_"), future.result())
+            self._connections[region] = future.result()
 
     def _connect_module_to_region(self, region, aws_access_key_id=None,
                                   aws_secret_access_key=None):
@@ -90,6 +93,14 @@ class ServicePool(object):
         """Retrieves the service's module allowed regions"""
         return [region.name for region in self.module.regions()]
 
+    def region(self, region_name):
+        """Access a pools specific region connections
+
+        :param  region_name: region connection to be accessed
+        :type   region_name: string
+        """
+        return self._connections[region_name]
+
 
     def add_region(self, region_name):
         """Connect the pool to a new region
@@ -98,7 +109,7 @@ class ServicePool(object):
         :type   region_name: string
         """
         region_client = self._connect_module_to_region(region_name)
-        setattr(self, region_name.replace("-", "_"), region_client)
+        self._connections[region_name] = region_client
         self.regions.add(region_name)
 
 
