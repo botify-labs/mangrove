@@ -50,8 +50,7 @@ class ServicePool(object):
     _boto_module_name = 'boto'
     _aws_module_name = None
 
-    def __init__(self, regions=None, default_region=None,
-                 async=True, connect=False, 
+    def __init__(self, regions=None, default_region=None, connect=False, 
                  aws_access_key_id=None, aws_secret_access_key=None):
         self.module = get_boto_module(self._aws_module_name)
         self._executor = ThreadPoolExecutor(max_workers=cpu_count())
@@ -63,19 +62,13 @@ class ServicePool(object):
 
         if connect is True:
             self.connect(
-                async=async,
                 aws_access_key_id=aws_access_key_id,
                 aws_secret_access_key=aws_secret_access_key
             )
 
 
-    def connect(self, async=True, aws_access_key_id=None,
-                aws_secret_access_key=None):
+    def connect(self, aws_access_key_id=None, aws_secret_access_key=None):
         """Starts connections to pool's services
-
-        :param  async: Whether connections should be established
-                       asynchrnously or not
-        :type   async: boolean
 
         :param  aws_access_key_id: aws access key token (if not provided
                                 AWS_ACCESS_KEY_ID will be fetched from
