@@ -7,7 +7,8 @@ from boto import ec2
 from mangrove.utils import get_boto_module
 from mangrove.exceptions import (
     MissingMethodError,
-    DoesNotExistError
+    DoesNotExistError,
+    NotConnectedError
 )
 
 
@@ -49,7 +50,8 @@ class ServicePool(object):
     _boto_module_name = 'boto'
     _aws_module_name = None
 
-    def __init__(self, regions=None, default_region=None, async=True,
+    def __init__(self, regions=None, default_region=None,
+                 async=True, connect=False, 
                  aws_access_key_id=None, aws_secret_access_key=None):
         self.module = get_boto_module(self._aws_module_name)
         self._executor = ThreadPoolExecutor(max_workers=cpu_count())
@@ -59,6 +61,32 @@ class ServicePool(object):
         self._regions = set(self.regions)
         self.default_region = default_region
 
+        if connect is True:
+            self.connect(
+                async=async,
+                aws_access_key_id=aws_access_key_id,
+                aws_secret_access_key=aws_secret_access_key
+            )
+
+
+    def connect(self, async=True, aws_access_key_id=None,
+                aws_secret_access_key=None):
+        """Starts connections to pool's services
+
+        :param  async: Whether connections should be established
+                       asynchrnously or not
+        :type   async: boolean
+
+        :param  aws_access_key_id: aws access key token (if not provided
+                                AWS_ACCESS_KEY_ID will be fetched from
+                                environment)
+        :type   aws_access_key_id: string
+
+        :param  aws_secret_access_key: aws secret access key (if not provided
+                                    AWS_SECRET_ACCESS_KEY will be fetched from
+                                    environment)
+        :type   aws_secret_access_key: string
+        """
         # For performances reasons, every regions connections are
         # made concurrently through the concurent.futures library.
         future_connections = {}
@@ -110,6 +138,11 @@ class ServicePool(object):
         :param  region_name: region connection to be accessed
         :type   region_name: string
         """
+        if not region_name in self._connections:
+            raise NotConnectedError(
+                "No active connexion found for {} region, "
+                "please use .connect() method to proceed.".format(region_name)
+            )
         return self._connections[region_name]
 
     @property
@@ -189,7 +222,8 @@ class ServiceMixinPool(object):
 
     _aws_module_names = []
 
-    def __init__(self, regions=None, aws_access_key_id=None, aws_secret_access_key=None):
+    def __init__(self, regions=None, connect=False,
+                 aws_access_key_id=None, aws_secret_access_key=None):
         self._executor = ThreadPoolExecutor(max_workers=cpu_count())
         self._services = {}
 
@@ -197,6 +231,7 @@ class ServiceMixinPool(object):
             self.add_service(
                 module,
                 regions=regions,
+                connect=connect,
                 aws_access_key_id=aws_access_key_id,
                 aws_secret_access_key=aws_secret_access_key
             )
@@ -206,7 +241,7 @@ class ServiceMixinPool(object):
         """Registered pool services list"""
         return self._services
 
-    def add_service(self, service_name, regions=None,
+    def add_service(self, service_name, regions=None, connect=False,
                     aws_access_key_id=None, aws_secret_access_key=None):
         """Adds a service connection to the services pool
 
@@ -231,6 +266,7 @@ class ServiceMixinPool(object):
 
         service_pool_instance = service_pool_kls(
             regions=regions,
+            connect=connect,
             aws_access_key_id=aws_access_key_id,
             aws_secret_access_key=aws_secret_access_key
         )
