@@ -22,6 +22,7 @@ setup(
     install_requires=[
         'boto',
         'futures',
+        'moto'
     ],
 
     package_dir={'': '.'},
