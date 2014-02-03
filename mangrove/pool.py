@@ -7,7 +7,8 @@ from boto import ec2
 from mangrove.utils import get_boto_module
 from mangrove.exceptions import (
     MissingMethodError,
-    DoesNotExistError
+    DoesNotExistError,
+    NotConnectedError
 )
 
 
@@ -137,6 +138,11 @@ class ServicePool(object):
         :param  region_name: region connection to be accessed
         :type   region_name: string
         """
+        if not region_name in self._connections:
+            raise NotConnectedError(
+                "No active connexion found for {} region, "
+                "please use .connect() method to proceed.".format(region_name)
+            )
         return self._connections[region_name]
 
     @property
