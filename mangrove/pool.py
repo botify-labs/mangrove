@@ -50,7 +50,7 @@ class ServicePool(object):
     _boto_module_name = 'boto'
     _aws_module_name = None
 
-    def __init__(self, regions=None, default_region=None, connect=False, 
+    def __init__(self, connect=False, regions=None, default_region=None,
                  aws_access_key_id=None, aws_secret_access_key=None):
         self.module = get_boto_module(self._aws_module_name)
         self._executor = ThreadPoolExecutor(max_workers=cpu_count())
@@ -190,9 +190,18 @@ class ServiceMixinPool(object):
 
     ::code-block: python
         class MyPool(ServiceMixinPool):
-            _aws_module_names = ['ec2', 's3', 'sqs']
+            _aws_services = {
+                'ec2': {
+                    'regions': '*',  # Wildcard for "every regions"
+                    'default_region': 'eu-west-1'
+                },
+                'sqs': {
+                    'regions': ['us-east-1', 'us-west-1', 'eu-west-1'],
+                    'default_region': 'us-west-1',
+                },
+            }
 
-        pool = MyPool(regions=['eu-west-1'])
+        pool = MyPool()
         pool.ec2.eu_west_1.get_all_instances()
         pool.s3.bucket('test')
         ...
@@ -213,28 +222,86 @@ class ServiceMixinPool(object):
     """
     __meta__ = ABCMeta
 
-    _aws_module_names = []
+    _aws_services = {}
 
-    def __init__(self, regions=None, connect=False,
+    def __init__(self, connect=False,
                  aws_access_key_id=None, aws_secret_access_key=None):
         self._executor = ThreadPoolExecutor(max_workers=cpu_count())
         self._services = {}
 
-        for module in self._aws_module_names:
+        self._load_aws_services(connect)
+
+    def _load_aws_services(self, connect=None, aws_access_key_id=None,
+                           aws_secret_access_key=None):
+        """Helper private method adding every _aws_services referenced services
+        to mixin pool
+
+        :param  connect: Should the pool being connected to remote services
+                         at startup.
+        :type   connect: boolean
+
+        :param  aws_access_key_id: aws access key token (if not provided
+                                AWS_ACCESS_KEY_ID will be fetched from
+                                environment)
+        :type   aws_access_key_id: string
+
+        :param  aws_secret_access_key: aws secret access key (if not provided
+                                    AWS_SECRET_ACCESS_KEY will be fetched from
+                                    environment)
+        :type   aws_secret_access_key: string
+        """
+        for name, config in self._aws_services.iteritems():
+            regions = None
+            default_region = None
+
+            if 'regions' in config:
+                if isinstance(config['regions'], (list, tuple)):
+                    regions = config['regions']
+                # Raise an error if provided regions string does
+                # not match with any valid wildcard
+                elif isinstance(config['regions'], str) and config['regions'] != '*':
+                    raise ValueError(
+                        "Invalid value supplied for {} service "
+                        "regions: {}".format(name, config['regions'])
+                    )
+
+                # Make sure provided default_region is part of
+                # provided regions
+                if 'default_region' in config:
+                    if (not isinstance(config['regions'], str) and
+                        not config['default_region'] in config['regions']):
+                        raise ValueError(
+                            "default_region must be a member of "
+                            "provided {} service regions".format(name)
+                        )
+
+                    # We want to set up the default region if and only if
+                    # a regions list or wildcard was supplied too.
+                    default_region = config['default_region']
+            else:
+                if 'default_region' in config:
+                    raise KeyError(
+                        "Unable to set {} service default_region. "
+                        "Depends on regions attribute".format(name)
+                    )
+
             self.add_service(
-                module,
-                regions=regions,
+                name,
                 connect=connect,
+                regions=regions,
+                default_region=default_region,
                 aws_access_key_id=aws_access_key_id,
                 aws_secret_access_key=aws_secret_access_key
             )
+
 
     @property
     def services(self):
         """Registered pool services list"""
         return self._services
 
-    def add_service(self, service_name, regions=None, connect=False,
+    def add_service(self, service_name, connect=False,
+                    regions=None, default_region=None,
                     aws_access_key_id=None, aws_secret_access_key=None):
         """Adds a service connection to the services pool
 
@@ -258,8 +325,9 @@ class ServiceMixinPool(object):
         service_pool_kls._aws_module_name = service_name
 
         service_pool_instance = service_pool_kls(
+            connect=False,
             regions=regions,
-            connect=connect,
+            default_region=default_region,
             aws_access_key_id=aws_access_key_id,
             aws_secret_access_key=aws_secret_access_key
         )
@@ -267,8 +335,12 @@ class ServiceMixinPool(object):
         setattr(self, service_name, service_pool_instance)
 
         if service_name not in self.services:
-            self._aws_module_names.append(service_name)
             self.services[service_name] = service_pool_instance
+        if service_name not in self._aws_services:
+            self._aws_services[service_name] = {'regions': regions or '*'}
+
+            if default_region is not None:
+                self._aws_service[service_name]['default_region'] = default_region
 
         return service_pool_instance
 
