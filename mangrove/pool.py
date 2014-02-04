@@ -294,6 +294,10 @@ class ServiceMixinPool(object):
                 aws_secret_access_key=aws_secret_access_key
             )
 
+    def connect(self):
+        """Connects every services in the pool"""
+        for name, pool in self._services.iteritems():
+            pool.connect()
 
     @property
     def services(self):
