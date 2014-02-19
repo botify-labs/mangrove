@@ -130,3 +130,7 @@ Once you instantiate your mixin pool, services you've specified will be exposed 
 ```
 
 
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/botify-labs/mangrove/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
