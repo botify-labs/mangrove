@@ -204,9 +204,9 @@ class ServiceMixinPool(object):
         pool.s3.bucket('test')
         ...
 
-    :param  regions: AWS regions to connect the service to as
-                     a default every regions will be used.
-    :type   regions: list of strings
+    :param  connect: Should the pool init services regions connections
+                     on instanciation.
+    :type   connect: bool
 
     :param  aws_access_key_id: aws access key token (if not provided
                                AWS_ACCESS_KEY_ID will be fetched from
