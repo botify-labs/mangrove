@@ -2,10 +2,10 @@ from abc import ABCMeta
 from multiprocessing import cpu_count
 
 from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures._base import Future
 
 from boto import ec2
 
-from mangrove.mappings import ConnectionsMapping
 from mangrove.utils import get_boto_module
 from mangrove.exceptions import (
     MissingMethodError,
@@ -14,6 +14,15 @@ from mangrove.exceptions import (
 )
 
 
+class ConnectionsMapping(dict):
+    def __getitem__(self, key):
+        value = dict.__getitem__(self, key)
+
+        if isinstance(value, Future):
+            value = value.result()
+            dict.__setitem__(self, key, value)
+
+        return value
 
 
 class ServicePool(object):
@@ -204,9 +213,9 @@ class ServiceMixinPool(object):
         pool.s3.bucket('test')
         ...
 
-    :param  regions: AWS regions to connect the service to as
-                     a default every regions will be used.
-    :type   regions: list of strings
+    :param  connect: Should the pool init services regions connections
+                     on instanciation.
+    :type   connect: bool
 
     :param  aws_access_key_id: aws access key token (if not provided
                                AWS_ACCESS_KEY_ID will be fetched from

@@ -1,5 +1,7 @@
 import unittest
 
+from concurrent.futures import ThreadPoolExecutor
+
 from boto.s3.connection import S3Connection
 from moto import mock_s3, mock_ec2
 
