@@ -33,28 +33,28 @@ For example:
 ```python
 >>> from mangrove.services import Ec2Pool, S3Pool, SqsPool
 
->>> ec2_pool = Ec2Pool()  # As a default every regions will be connected
->>> s3_pool = S3Pool(regions=['us-east-1', 'us-west-1'])  # But you can specify the one you're interested in
->>> sqs_pool = SqsPool(default_region='us-east-1')  # And, you can set a default region to be used later on
+>>> ec2_pool = Ec2Pool(connect=True)  # As a default every regions will be connected
+>>> s3_pool = S3Pool(connect=True, regions=['us-east-1', 'us-west-1'])  # But you can specify the one you're interested in
+>>> sqs_pool = SqsPool(connect=True, default_region='us-east-1')  # And, you can set a default region to be used later on
 
 
 # Once your pool is created you can access the various regions specific
-# client through the .region method.
->>> ec2_pool.region('us_west_1').get_all_instances()
+# client through the .regions property.
+>>> ec2_pool.regions['us_west_1'].get_all_instances()
 [Reservation:i7291b6,
  Reservation:i2e435a,
  ...
 ]
->>> ec2_pool.region('us_east_1').get_all_images()
+>>> ec2_pool.regions['us_east_1'].get_all_images()
 []
 
 # If you've set a default_region, you might access it directly.
->>> sqs_pool.default_region.get_all_queues()
+>>> sqs_pool.regions.default.get_all_queues()
 []
 
 # Any time, you're able to add a region connection to the pool
 >>> s3_pool.add_region('us-east-2')
->>> s3_pool.region('us_east_2')
+>>> s3_pool.regions['us_east_2']
 <S3Pool us_east_2>
 ```
 
@@ -76,15 +76,15 @@ Creating your own should be as easy as subclassing ``mangrove.pool.ServicePool``
 Then you can instantiate it and use it as any other mangrove ServicePool subclasses:
 
 ```python
->>> p = MySupperDupperPool(regions=['eu-west-1', 'us-west-1'])
->>> p.region('us_west_1').botoservice_method()
+>>> p = MySupperDupperPool(connect=True, regions=['eu-west-1', 'us-west-1'])
+>>> p.regions['us_west_1'].get_all_buckets()  # in this example, a S3 pool
 ```
 
 Note that as ServicePool is the base class for helpers, you can of course dynamically add a region to the pool at anytime
 
 ```python
->>> p.add_region('ap-southeast-1')
->>> p.region('ap_southeast_1')
+>>> p.add.regions['ap-southeast-1']
+>>> p.regions['ap_southeast_1']
 <MySupperDupperPool ap_southeast_1>
 ```
 
@@ -119,10 +119,10 @@ and setting a class attribute:
 Once you instantiate your mixin pool, services you've specified will be exposed as ServicePool instance attributes.
 
 ```python
->>> mixin_pool = WebRelatedServicesPool(regions=['us_west_1', 'eu_west_1'])
+>>> mixin_pool = WebRelatedServicesPool(connect=True, regions=['us_west_1', 'eu_west_1'])
 >>> mixin_pool.s3
 <ServicePool S3>
->>> mixin_pool.ec2.region('us_west_1').get_all_instances()
+>>> mixin_pool.ec2.regions['us_west_1'].get_all_instances()
 [Reservation:i76f98b,
  Reservation:i23d4f8,
  ...

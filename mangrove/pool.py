@@ -14,8 +14,6 @@ from mangrove.exceptions import (
 )
 
 
-
-
 class ServicePool(object):
     """Aws service connection pool wrapper
 
@@ -60,9 +58,8 @@ class ServicePool(object):
         self._executor = ThreadPoolExecutor(max_workers=cpu_count())
         self._connections = ConnectionsMapping()
 
-        self._regions = regions or self._get_module_regions()
-        self._regions = set(self.regions)
-
+        self._regions_names = regions or self._get_module_regions()
+        self._regions_names = set(self._regions_names)
         self.default_region = default_region
 
         if connect is True:
@@ -70,7 +67,6 @@ class ServicePool(object):
                 aws_access_key_id=aws_access_key_id,
                 aws_secret_access_key=aws_secret_access_key
             )
-
 
     def connect(self, aws_access_key_id=None, aws_secret_access_key=None):
         """Starts connections to pool's services
@@ -87,13 +83,16 @@ class ServicePool(object):
         """
         # For performances reasons, every regions connections are
         # made concurrently through the concurent.futures library.
-        for region in self.regions:
+        for region in self._regions_names:
             self._connections[region] = self._executor.submit(
                 self._connect_module_to_region,
                 region,
                 aws_access_key_id=aws_access_key_id,
                 aws_secret_access_key=aws_secret_access_key
             )
+
+        if self.default_region is not None:
+            self._connections.default = self.default_region
 
     def _connect_module_to_region(self, region, aws_access_key_id=None,
                                   aws_secret_access_key=None):
@@ -121,11 +120,10 @@ class ServicePool(object):
 
     @property
     def regions(self):
-        return self._regions
+        return self._connections
 
     def region(self, region_name):
-        """Access a pools specific region connections
-
+        """Access a pools specific region connections 
         :param  region_name: region connection to be accessed
         :type   region_name: string
         """
@@ -155,7 +153,7 @@ class ServicePool(object):
 
     @default_region.setter
     def default_region(self, value):
-        if value is not None and not value in self.regions:
+        if value is not None and not value in self._regions_names:
             raise DoesNotExistError(
                     "Cannot set default region to {}. "
                     "Please make sure you've added it to the pool".format(value)
@@ -171,7 +169,7 @@ class ServicePool(object):
         """
         region_client = self._connect_module_to_region(region_name)
         self._connections[region_name] = region_client
-        self._regions.add(region_name)
+        self._regions_names.add(region_name)
 
 class ServiceMixinPool(object):
     """Multiple AWS services connection pool wrapper class
