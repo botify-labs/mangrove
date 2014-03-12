@@ -70,7 +70,7 @@ Creating your own should be as easy as subclassing ``mangrove.pool.ServicePool``
         # Subclassing ServicePool is as easy as setting a class
         # attribute to the name of the related boto service class
         # name
-        _aws_module_name = 'mysupperdupperservice'
+        service = 'mysupperdupperservice'
 ```
 
 Then you can instantiate it and use it as any other mangrove ServicePool subclasses:

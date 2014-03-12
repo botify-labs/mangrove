@@ -11,7 +11,7 @@ from mangrove.exceptions import NotConnectedError
 
 
 class DummyS3Pool(ServicePool):
-    _aws_module_name = 's3'
+    service = 's3'
 
 
 class DummyMixinPool(ServiceMixinPool):

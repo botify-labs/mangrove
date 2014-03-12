@@ -20,7 +20,7 @@ class ServicePool(object):
     ServicePool class should be subclassed to provide
     an amazon aws service connection pool. To do so,
     creating a brand new class subclassing this one and
-    setting the _aws_module_name class attribute to an
+    setting the services class attribute to an
     existing boto module class should be enough.
 
     * *Examples*: please take a look to mangrove.services
@@ -49,12 +49,17 @@ class ServicePool(object):
     """
     __meta__ = ABCMeta
 
+    # Name of the boto python module to be used. Just in case
+    # you'd wanna use a fork instead.
     _boto_module_name = 'boto'
-    _aws_module_name = None
+
+    # Boto aws service name to bind the regionalized
+    # pool to.
+    service = None
 
     def __init__(self, connect=False, regions=None, default_region=None,
                  aws_access_key_id=None, aws_secret_access_key=None):
-        self.module = get_boto_module(self._aws_module_name)
+        self.module = get_boto_module(self.service)
         self._executor = ThreadPoolExecutor(max_workers=cpu_count())
         self._connections = ConnectionsMapping()
 
@@ -322,7 +327,7 @@ class ServiceMixinPool(object):
         :type   aws_secret_access_key: string
         """
         service_pool_kls = type(service_name.capitalize(), (ServicePool,), {})
-        service_pool_kls._aws_module_name = service_name
+        service_pool_kls.service = service_name
 
         service_pool_instance = service_pool_kls(
             connect=False,
@@ -340,7 +345,7 @@ class ServiceMixinPool(object):
             self._aws_services[service_name] = {'regions': regions or '*'}
 
             if default_region is not None:
-                self._aws_service[service_name]['default_region'] = default_region
+                self._aws_services[service_name]['default_region'] = default_region
 
         return service_pool_instance
 
