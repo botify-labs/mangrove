@@ -60,12 +60,14 @@ class ServicePool(object):
     def __init__(self, connect=False, regions=None, default_region=None,
                  aws_access_key_id=None, aws_secret_access_key=None):
         self.module = get_boto_module(self.service)
+
         self._executor = ThreadPoolExecutor(max_workers=cpu_count())
         self._connections = ConnectionsMapping()
 
-        self._regions_names = regions or self._get_module_regions()
-        self._regions_names = set(self._regions_names)
-        self.default_region = default_region
+        # _default_region private property setting should
+        # always be called after the _regions_names is set
+        self._regions_names = regions
+        self._default_region = default_region
 
         if connect is True:
             self.connect(
@@ -96,8 +98,8 @@ class ServicePool(object):
                 aws_secret_access_key=aws_secret_access_key
             )
 
-        if self.default_region is not None:
-            self._connections.default = self.default_region
+        if self._default_region is not None:
+            self._connections.default = self._default_region
 
     def _connect_module_to_region(self, region, aws_access_key_id=None,
                                   aws_secret_access_key=None):
@@ -140,10 +142,23 @@ class ServicePool(object):
         return self._connections[region_name]
 
     @property
-    def default_region(self):
-        if not hasattr(self, '_default_region_name'):
-            self._default_region_name = None
+    def _regions_names(self):
+        if not hasattr(self, '_regions_names_set'):
+            self._regions_names_set = None
+        return self._regions_names_set
 
+    @_regions_names.setter
+    def _regions_names(self, value):
+        # Set up the internal regions_names attribute according to 
+        # the provided regions parameter. Fallbacks on boto aws module
+        # regions.
+        if value is not None:
+            self._regions_names_set = set(value)
+        else:
+            self._regions_names_set = set([r.name for r in self.module.regions()])
+
+    @property
+    def _default_region(self):
         if self._default_region_name is not None:
             if not self._default_region_name in self._connections:
                 raise DoesNotExistError(
@@ -156,8 +171,8 @@ class ServicePool(object):
 
         return self._connections[self._default_region_name]
 
-    @default_region.setter
-    def default_region(self, value):
+    @_default_region.setter
+    def _default_region(self, value):
         if value is not None and not value in self._regions_names:
             raise DoesNotExistError(
                     "Cannot set default region to {}. "
@@ -237,9 +252,9 @@ class ServiceMixinPool(object):
         self._executor = ThreadPoolExecutor(max_workers=cpu_count())
         self._services = {}
 
-        self._loadservices(connect)
+        self._load_services(connect)
 
-    def _loadservices(self, connect=None, aws_access_key_id=None,
+    def _load_services(self, connect=None, aws_access_key_id=None,
                            aws_secret_access_key=None):
         """Helper private method adding every services referenced services
         to mixin pool
