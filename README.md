@@ -103,7 +103,7 @@ and setting a class attribute:
 >>> from mangrove.pool import ServiceMixinPool
 
 >>> class WebRelatedServicesPool(ServiceMixinPool):
-        _aws_services = {
+        services = {
             'ec2': {
                 'regions': ['us-east-1', 'eu-west-1'],
                 'default_region': 'eu-west-1',

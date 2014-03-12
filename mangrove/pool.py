@@ -191,7 +191,7 @@ class ServiceMixinPool(object):
 
     ::code-block: python
         class MyPool(ServiceMixinPool):
-            _aws_services = {
+            services = {
                 'ec2': {
                     'regions': '*',  # Wildcard for "every regions"
                     'default_region': 'eu-west-1'
@@ -223,18 +223,25 @@ class ServiceMixinPool(object):
     """
     __meta__ = ABCMeta
 
-    _aws_services = {}
+    # aws services to be added to the mixin pool. To add one, please
+    # respect the following pattern: 
+    # 'service_name': {'regions': [], 'default_region'}
+    # * regions parameter should be whether a list of aws regions names,
+    # or the '*' wildcard (['*'])
+    # * default_region parameter should be an aws region part of
+    # the provided regions parameters 
+    services = {}
 
     def __init__(self, connect=False,
                  aws_access_key_id=None, aws_secret_access_key=None):
         self._executor = ThreadPoolExecutor(max_workers=cpu_count())
         self._services = {}
 
-        self._load_aws_services(connect)
+        self._loadservices(connect)
 
-    def _load_aws_services(self, connect=None, aws_access_key_id=None,
+    def _loadservices(self, connect=None, aws_access_key_id=None,
                            aws_secret_access_key=None):
-        """Helper private method adding every _aws_services referenced services
+        """Helper private method adding every services referenced services
         to mixin pool
 
         :param  connect: Should the pool being connected to remote services
@@ -251,7 +258,7 @@ class ServiceMixinPool(object):
                                     environment)
         :type   aws_secret_access_key: string
         """
-        for name, config in self._aws_services.iteritems():
+        for name, config in self.services.iteritems():
             regions = None
             default_region = None
 
@@ -300,11 +307,6 @@ class ServiceMixinPool(object):
         for name, pool in self._services.iteritems():
             pool.connect()
 
-    @property
-    def services(self):
-        """Registered pool services list"""
-        return self._services
-
     def add_service(self, service_name, connect=False,
                     regions=None, default_region=None,
                     aws_access_key_id=None, aws_secret_access_key=None):
@@ -341,11 +343,11 @@ class ServiceMixinPool(object):
 
         if service_name not in self.services:
             self.services[service_name] = service_pool_instance
-        if service_name not in self._aws_services:
-            self._aws_services[service_name] = {'regions': regions or '*'}
+        if service_name not in self.services:
+            self.services[service_name] = {'regions': regions or '*'}
 
             if default_region is not None:
-                self._aws_services[service_name]['default_region'] = default_region
+                self.services[service_name]['default_region'] = default_region
 
         return service_pool_instance
 
