@@ -109,5 +109,12 @@ class ServiceDescription(object):
         self._default_region = value
 
 class ServicePoolDescription(dict):
-    def __init__(self, *args, **kwargs):
-        pass
+    def __init__(self, description=None):
+        super(ServicePoolDescription, self).__init__()
+
+        if description is not None:
+            self.from_dict(description)
+
+    def from_dict(self, description):
+        for service_name, localisation in description.iteritems():
+            self[service_name] =  ServiceDescription({service_name: localisation})

@@ -2,9 +2,9 @@ import pytest
 import types
 
 from boto import ec2
-from moto import mock_ec2
+from moto import mock_ec2, mock_s3
 
-from mangrove.declarative import ServiceDescription
+from mangrove.declarative import ServiceDescription, ServicePoolDescription
 from mangrove.constants import WILDCARD_ALL_REGIONS
 from mangrove.exceptions import InvalidServiceError, DoesNotExistError
 
@@ -168,3 +168,29 @@ class TestServiceDescription:
         with pytest.raises(TypeError):
             ServiceDescription(123)
 
+class TestServicePoolDescription:
+    @mock_ec2
+    @mock_s3
+    def test_from_dict_with_valid_description(self):
+        spd = ServicePoolDescription()
+        spd.from_dict({
+            'ec2': {},
+            's3': {
+                'region': 'us-east-1',
+            }
+        })
+
+        assert isinstance(spd['ec2'], ServiceDescription) is True
+        assert spd['ec2'].service_name == 'ec2'
+        assert isinstance(spd['s3'], ServiceDescription) is True
+        assert spd['s3'].service_name == 's3'
+
+    def test_from_dict_with_invalid_description_raises(self):
+        spd = ServicePoolDescription()
+
+        with pytest.raises(InvalidServiceError):
+            spd.from_dict({
+                'abc': {
+                    '123': 'easy as',
+                }
+            })
