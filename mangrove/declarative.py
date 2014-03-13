@@ -5,47 +5,47 @@ from mangrove.constants import WILDCARD_ALL_REGIONS
 from mangrove.exceptions import InvalidServiceError, DoesNotExistError
 
 
-class ServiceDescription(object):
-    def __init__(self, description=None):
+class ServiceDeclaration(object):
+    def __init__(self, declaration=None):
         self._module = None
         self._service_name = None
         self._regions = []
         self._default_region = None
 
-        if description is not None:
-            self.load(description)
+        if declaration is not None:
+            self.load(declaration)
 
-    def load(self, description):
-        if isinstance(description, str) is True:
-            self.from_string(description)
-        elif isinstance(description, dict) is True:
-            self.from_dict(description)
+    def load(self, declaration):
+        if isinstance(declaration, str) is True:
+            self.from_string(declaration)
+        elif isinstance(declaration, dict) is True:
+            self.from_dict(declaration)
         else:
             raise TypeError(
-                "Unhandle description type. Expected string or dict, "
-                "{} found".format(type(description))
+                "Unhandle declaration type. Expected string or dict, "
+                "{} found".format(type(declaration))
             )
 
-    def from_string(self, description):
-        if not isinstance(description, str):
+    def from_string(self, declaration):
+        if not isinstance(declaration, str):
             raise TypeError(
-                "description parameter has to be of type str, "
-                "got {} instead.".format(type(description))
+                "declaration parameter has to be of type str, "
+                "got {} instead.".format(type(declaration))
             )
 
-        self.service_name = description
+        self.service_name = declaration
         self.regions = WILDCARD_ALL_REGIONS
 
-    def from_dict(self, description):
-        if not isinstance(description, dict):
+    def from_dict(self, declaration):
+        if not isinstance(declaration, dict):
             raise TypeError(
-                "description parameter has to be of type dict, "
-                "got {} instead.".format(type(description))
+                "declaration parameter has to be of type dict, "
+                "got {} instead.".format(type(declaration))
             )
 
-        self.service_name = description.keys()[0]
-        self.regions = description[self.service_name].get('regions')
-        self.default_region = description[self.service_name].get('default_region')
+        self.service_name = declaration.keys()[0]
+        self.regions = declaration[self.service_name].get('regions')
+        self.default_region = declaration[self.service_name].get('default_region')
         
 
     @property
@@ -108,13 +108,13 @@ class ServiceDescription(object):
             raise DoesNotExistError("supplied region not found to be part of regions attribute")
         self._default_region = value
 
-class ServicePoolDescription(dict):
-    def __init__(self, description=None):
-        super(ServicePoolDescription, self).__init__()
+class ServicePoolDeclaration(dict):
+    def __init__(self, declaration=None):
+        super(ServicePoolDeclaration, self).__init__()
 
-        if description is not None:
-            self.from_dict(description)
+        if declaration is not None:
+            self.from_dict(declaration)
 
-    def from_dict(self, description):
-        for service_name, localisation in description.iteritems():
-            self[service_name] =  ServiceDescription({service_name: localisation})
+    def from_dict(self, declaration):
+        for service_name, localisation in declaration.iteritems():
+            self[service_name] =  ServiceDeclaration({service_name: localisation})
