@@ -5,6 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from boto import ec2
 
+from mangrove.declarative import ServiceDeclaration, ServicePoolDeclaration
 from mangrove.mappings import ConnectionsMapping
 from mangrove.utils import get_boto_module
 from mangrove.exceptions import (
@@ -59,7 +60,10 @@ class ServicePool(object):
 
     def __init__(self, connect=False, regions=None, default_region=None,
                  aws_access_key_id=None, aws_secret_access_key=None):
-        self.module = get_boto_module(self.service)
+        self.service_declaration = ServiceDeclaration(self.service)
+        self.service_declaration.regions = regions
+        self.service_declaration.default_region = default_region
+        self.module = self.service_declaration.module
 
         self._executor = ThreadPoolExecutor(max_workers=cpu_count())
         self._connections = ConnectionsMapping()
@@ -90,7 +94,7 @@ class ServicePool(object):
         """
         # For performances reasons, every regions connections are
         # made concurrently through the concurent.futures library.
-        for region in self._regions_names:
+        for region in self.service_declaration.regions:
             self._connections[region] = self._executor.submit(
                 self._connect_module_to_region,
                 region,
@@ -99,7 +103,7 @@ class ServicePool(object):
             )
 
         if self._default_region is not None:
-            self._connections.default = self._default_region
+            self._connections.default = self.service_declaration.default_region
 
     def _connect_module_to_region(self, region, aws_access_key_id=None,
                                   aws_secret_access_key=None):
@@ -121,10 +125,6 @@ class ServicePool(object):
         """
         return self.module.connect_to_region(region)
 
-    def _get_module_regions(self):
-        """Retrieves the service's module allowed regions"""
-        return [region.name for region in self.module.regions()]
-
     @property
     def regions(self):
         return self._connections
@@ -141,46 +141,6 @@ class ServicePool(object):
             )
         return self._connections[region_name]
 
-    @property
-    def _regions_names(self):
-        if not hasattr(self, '_regions_names_set'):
-            self._regions_names_set = None
-        return self._regions_names_set
-
-    @_regions_names.setter
-    def _regions_names(self, value):
-        # Set up the internal regions_names attribute according to 
-        # the provided regions parameter. Fallbacks on boto aws module
-        # regions.
-        if value is not None:
-            self._regions_names_set = set(value)
-        else:
-            self._regions_names_set = set([r.name for r in self.module.regions()])
-
-    @property
-    def _default_region(self):
-        if self._default_region_name is not None:
-            if not self._default_region_name in self._connections:
-                raise DoesNotExistError(
-                    "No connection disposable connection to {} region. "
-                    "you might want to set it using .add_region method "
-                    "before setting default_region".format(self._default_region_name)
-                )
-        else:
-            return None
-
-        return self._connections[self._default_region_name]
-
-    @_default_region.setter
-    def _default_region(self, value):
-        if value is not None and not value in self._regions_names:
-            raise DoesNotExistError(
-                    "Cannot set default region to {}. "
-                    "Please make sure you've added it to the pool".format(value)
-            )
-
-        self._default_region_name = value
-
     def add_region(self, region_name):
         """Connect the pool to a new region
 
@@ -189,7 +149,7 @@ class ServicePool(object):
         """
         region_client = self._connect_module_to_region(region_name)
         self._connections[region_name] = region_client
-        self._regions_names.add(region_name)
+        self.service_declaration.regions.append(region_name)
 
 class ServiceMixinPool(object):
     """Multiple AWS services connection pool wrapper class
