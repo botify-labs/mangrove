@@ -1,0 +1,1 @@
+WILDCARD_ALL_REGIONS = '*'

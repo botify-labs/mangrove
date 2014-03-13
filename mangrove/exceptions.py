@@ -8,3 +8,6 @@ class DoesNotExistError(Exception):
 
 class NotConnectedError(Exception):
     pass
+
+class InvalidServiceError(Exception):
+    pass
