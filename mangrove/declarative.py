@@ -105,7 +105,7 @@ class ServiceDeclaration(object):
     @default_region.setter
     def default_region(self, value):
         if value is not None and self.regions is not None and not value in self.regions:
-            raise DoesNotExistError("supplied region not found to be part of regions attribute")
+            raise ValueError("supplied region not found to be part of regions attribute")
         self._default_region = value
 
 class ServicePoolDeclaration(dict):

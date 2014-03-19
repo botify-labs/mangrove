@@ -145,7 +145,15 @@ class TestServiceDeclaration:
         sd.service_name = 'ec2'
         sd.regions = []
 
-        with pytest.raises(DoesNotExistError):
+        with pytest.raises(ValueError):
+            sd.default_region = 'us-east-1'
+
+    def test_default_region_setter_with_region_not_part_of_regions(self):
+        sd = ServiceDeclaration()
+        sd.service_name = 'ec2'
+        sd.regions = ['us-west-1']
+
+        with pytest.raises(ValueError):
             sd.default_region = 'us-east-1'
 
     def test_default_region_setter_with_none_value(self):
