@@ -2,100 +2,100 @@ from mangrove.pool import ServicePool
 
 
 class Ec2Pool(ServicePool):
-    _aws_module_name = 'ec2'
+    service = 'ec2'
 
 
 class S3Pool(ServicePool):
-    _aws_module_name = 's3'
+    service = 's3'
 
 
 class EmrPool(ServicePool):
-    _aws_module_name = 'emr'
+    service = 'emr'
 
 
 class AutoscalePool(ServicePool):
-    _aws_module_name = 'autoscale'
+    service = 'autoscale'
 
 
 class DynamoDB2Pool(ServicePool):
-    _aws_module_name = 'dynamodb2'
+    service = 'dynamodb2'
 
 
 class DynamoDBPool(ServicePool):
-    _aws_module_name = 'dynamodb'
+    service = 'dynamodb'
 
 
 class RdsPool(ServicePool):
-    _aws_module_name = 'rds'
+    service = 'rds'
 
 
 class ElasticachePool(ServicePool):
-    _aws_module_name = 'elasticache'
+    service = 'elasticache'
 
 
 class RedshiftPool(ServicePool):
-    _aws_module_name = 'redshift'
+    service = 'redshift'
 
 
 class SimpleDBPool(ServicePool):
-    _aws_module_name = 'sdb'
+    service = 'sdb'
 
 
 class CloudFormationPool(ServicePool):
-    _aws_module_name = 'cloudformation'
+    service = 'cloudformation'
 
 
 class BeanstalkPool(ServicePool):
-    _aws_module_name = 'beanstalk'
+    service = 'beanstalk'
 
 
 class IamPool(ServicePool):
-    _aws_module_name = 'iam'
+    service = 'iam'
 
 
 class StsPool(ServicePool):
-    _aws_module_name = 'sts'
+    service = 'sts'
 
 
 class CloudSearchPool(ServicePool):
-    _aws_module_name = 'cloudsearch'
+    service = 'cloudsearch'
 
 
 class ElasticTranscoderPool(ServicePool):
-    _aws_module_name = 'elastictranscoder'
+    service = 'elastictranscoder'
 
 
 class SwfPool(ServicePool):
-    _aws_module_name = 'swf'
+    service = 'swf'
 
 
 class SqsPool(ServicePool):
-    _aws_module_name = 'sqs'
+    service = 'sqs'
 
 
 class SimpleNotificationPool(ServicePool):
-    _aws_module_name = 'sns'
+    service = 'sns'
 
 
 class SimpleEmailPool(ServicePool):
-    _aws_module_name = 'ses'
+    service = 'ses'
 
 
 class VpcPool(ServicePool):
-    _aws_module_name = 'vpc'
+    service = 'vpc'
 
 
 class ElbPool(ServicePool):
-    _aws_module_name = 'elb'
+    service = 'elb'
 
 
 class GlacierPool(ServicePool):
-    _aws_module_name = 'glacier'
+    service = 'glacier'
 
 
 class MechanicalTurkPool(ServicePool):
-    _aws_module_name = 'mturk'
+    service = 'mturk'
 
 
 class SupportPool(ServicePool):
-    _aws_module_name = 'support'
+    service = 'support'

@@ -70,7 +70,17 @@ Creating your own should be as easy as subclassing ``mangrove.pool.ServicePool``
         # Subclassing ServicePool is as easy as setting a class
         # attribute to the name of the related boto service class
         # name
-        _aws_module_name = 'mysupperdupperservice'
+        service = 'mysupperdupperservice'
+
+# Note that you can also directly specify which regions
+# and default region your Pool should register as a default:
+>>> class MySelectivePool(ServicePool):
+    service = {
+        'mysupperdupperservice': {
+            'regions': ['us-east-1', 'eu-west-1'],
+            'default_region': 'us-west-1',
+        }
+    }
 ```
 
 Then you can instantiate it and use it as any other mangrove ServicePool subclasses:
@@ -103,7 +113,7 @@ and setting a class attribute:
 >>> from mangrove.pool import ServiceMixinPool
 
 >>> class WebRelatedServicesPool(ServiceMixinPool):
-        _aws_services = {
+        services = {
             'ec2': {
                 'regions': ['us-east-1', 'eu-west-1'],
                 'default_region': 'eu-west-1',
