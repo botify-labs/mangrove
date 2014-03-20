@@ -1,4 +1,4 @@
-import unittest
+import pytest
 
 from concurrent.futures import ThreadPoolExecutor
 
@@ -27,51 +27,51 @@ class DummyMixinPool(ServiceMixinPool):
     }
 
 
-class TestServicePool(unittest.TestCase):
+class TestServicePool:
     def test_init_with_connect_flag_set_to_false_has_no_connections(self):
         pool = DummyS3Pool(connect=False)
-        self.assertEqual(pool._connections, ConnectionsMapping())
+        assert pool._connections == ConnectionsMapping()
 
     def test_pool_method_call_with_connect_to_false_raises(self):
         pool = DummyS3Pool(connect=False)
 
-        with self.assertRaises(NotConnectedError):
+        with pytest.raises(NotConnectedError):
             pool.region('us-east-1').get_all_buckets()
 
     def test_pool_regions_are_set_according_to_init_params(self):
         pool = DummyS3Pool(connect=False, regions=['us-east-1', 'eu-west-1'])
-        self.assertEqual(pool._service_declaration.regions, ['us-east-1', 'eu-west-1'])
-        self.assertEqual(pool._connections.keys(), [])
+        assert pool._service_declaration.regions == ['us-east-1', 'eu-west-1']
+        assert pool._connections.keys() == []
 
     @mock_s3
     def test_pool_regions_are_connected_according_to_init_params(self):
         pool = DummyS3Pool(connect=True, regions=['us-east-1', 'eu-west-1'])
-        self.assertEqual(pool._service_declaration.regions, ['us-east-1', 'eu-west-1'])
-        self.assertEqual(pool._connections.keys(), ['us-east-1', 'eu-west-1'])
+        assert pool._service_declaration.regions == ['us-east-1', 'eu-west-1']
+        assert pool._connections.keys() == ['us-east-1', 'eu-west-1']
 
     @mock_s3
     def test_add_region_actually_sets_up_region_connection(self):
         pool = DummyS3Pool(connect=True, regions=['us-east-1'])
-        self.assertEqual(pool._service_declaration.regions, ['us-east-1'])
+        assert pool._service_declaration.regions == ['us-east-1']
 
         pool.add_region('eu-west-1')
-        self.assertEqual(pool._service_declaration.regions, ['us-east-1', 'eu-west-1'])
-        self.assertTrue(isinstance(pool._connections['eu-west-1'], S3Connection))
+        assert pool._service_declaration.regions == ['us-east-1', 'eu-west-1']
+        assert isinstance(pool._connections['eu-west-1'], S3Connection) is True
 
 
-class TestServiceMixinPool(unittest.TestCase):
+class TestServiceMixinPool:
     @mock_s3
     @mock_ec2
     def test_valid_mixin_pool_instanciation(self):
         pool = DummyMixinPool(connect=False)
 
-        self.assertTrue('s3' in pool.services)
-        self.assertTrue('ec2' in pool.services)
+        assert 's3' in pool.services
+        assert 'ec2' in pool.services
 
-        self.assertTrue(pool.s3._regions_names == ['us-east-1', 'eu-west-1'])
-        self.assertTrue(pool.s3._default_region == 'us-east-1')
-        self.assertTrue(len(pool.ec2._regions_names) > 0)
-        self.assertTrue(pool.ec2._default_region == 'eu-west-1')
+        assert pool.s3._regions_names == ['us-east-1', 'eu-west-1']
+        assert pool.s3._default_region == 'us-east-1'
+        assert len(pool.ec2._regions_names) > 0
+        assert pool.ec2._default_region == 'eu-west-1'
 
     @mock_s3
     @mock_ec2
@@ -83,7 +83,7 @@ class TestServiceMixinPool(unittest.TestCase):
                 }
             }
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             pool = RaisingMixinPool(connect=False)
 
     @mock_s3
@@ -97,7 +97,7 @@ class TestServiceMixinPool(unittest.TestCase):
                 }
             }
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             pool = RaisingMixinPool(connect=False)
 
     @mock_s3
@@ -111,5 +111,5 @@ class TestServiceMixinPool(unittest.TestCase):
                 }
             }
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             pool = RaisingMixinPool(connect=False)
