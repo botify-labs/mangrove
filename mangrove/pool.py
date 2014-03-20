@@ -210,7 +210,8 @@ class ServiceMixinPool(object):
     def __init__(self, connect=False,
                  aws_access_key_id=None, aws_secret_access_key=None):
         self._executor = ThreadPoolExecutor(max_workers=cpu_count())
-        self._services = {}
+        self.services_declaration = ServicePoolDeclaration(self.services)
+        self._services_store = {}
 
         self._load_services(connect)
 
@@ -233,53 +234,19 @@ class ServiceMixinPool(object):
                                     environment)
         :type   aws_secret_access_key: string
         """
-        for name, config in self.services.iteritems():
-            regions = None
-            default_region = None
-
-            if 'regions' in config:
-                if isinstance(config['regions'], (list, tuple)):
-                    regions = config['regions']
-                # Raise an error if provided regions string does
-                # not match with any valid wildcard
-                elif isinstance(config['regions'], str) and config['regions'] != '*':
-                    raise ValueError(
-                        "Invalid value supplied for {} service "
-                        "regions: {}".format(name, config['regions'])
-                    )
-
-                # Make sure provided default_region is part of
-                # provided regions
-                if 'default_region' in config:
-                    if (not isinstance(config['regions'], str) and
-                        not config['default_region'] in config['regions']):
-                        raise ValueError(
-                            "default_region must be a member of "
-                            "provided {} service regions".format(name)
-                        )
-
-                    # We want to set up the default region if and only if
-                    # a regions list or wildcard was supplied too.
-                    default_region = config['default_region']
-            else:
-                if 'default_region' in config:
-                    raise KeyError(
-                        "Unable to set {} service default_region. "
-                        "Depends on regions attribute".format(name)
-                    )
-
+        for service_name, localisation in self.services_declaration.iteritems():
             self.add_service(
-                name,
+                service_name,
                 connect=connect,
-                regions=regions,
-                default_region=default_region,
+                regions=localisation.regions,
+                default_region=localisation.default_region,
                 aws_access_key_id=aws_access_key_id,
                 aws_secret_access_key=aws_secret_access_key
             )
 
     def connect(self):
         """Connects every services in the pool"""
-        for name, pool in self._services.iteritems():
+        for name, pool in self._services_store.iteritems():
             pool.connect()
 
     def add_service(self, service_name, connect=False,
@@ -316,13 +283,12 @@ class ServiceMixinPool(object):
 
         setattr(self, service_name, service_pool_instance)
 
-        if service_name not in self.services:
-            self.services[service_name] = service_pool_instance
-        if service_name not in self.services:
-            self.services[service_name] = {'regions': regions or '*'}
-
+        if service_name not in self._services_store:
+            self._services_store[service_name] = service_pool_instance
+        if service_name not in self.services_declaration:
+            self.services_declaration[service_name].regions = regions or '*'
             if default_region is not None:
-                self.services[service_name]['default_region'] = default_region
+                self.services_declaration[service_name].default_region = default_region
 
         return service_pool_instance
 

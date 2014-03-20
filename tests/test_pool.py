@@ -7,7 +7,7 @@ from moto import mock_s3, mock_ec2
 
 from mangrove.pool import ServicePool, ServiceMixinPool
 from mangrove.mappings import ConnectionsMapping
-from mangrove.exceptions import NotConnectedError
+from mangrove.exceptions import NotConnectedError, DoesNotExistError
 
 
 class DummyS3Pool(ServicePool):
@@ -68,10 +68,10 @@ class TestServiceMixinPool(unittest.TestCase):
         self.assertTrue('s3' in pool.services)
         self.assertTrue('ec2' in pool.services)
 
-        self.assertTrue(pool.s3._regions_names == set(['us-east-1', 'eu-west-1']))
-        self.assertTrue(pool.s3._default_region_name == 'us-east-1')
+        self.assertTrue(pool.s3._regions_names == ['us-east-1', 'eu-west-1'])
+        self.assertTrue(pool.s3._default_region == 'us-east-1')
         self.assertTrue(len(pool.ec2._regions_names) > 0)
-        self.assertTrue(pool.ec2._default_region_name == 'eu-west-1')
+        self.assertTrue(pool.ec2._default_region == 'eu-west-1')
 
     @mock_s3
     @mock_ec2
@@ -83,7 +83,7 @@ class TestServiceMixinPool(unittest.TestCase):
                 }
             }
 
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ValueError):
             pool = RaisingMixinPool(connect=False)
 
     @mock_s3
