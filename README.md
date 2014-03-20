@@ -71,6 +71,16 @@ Creating your own should be as easy as subclassing ``mangrove.pool.ServicePool``
         # attribute to the name of the related boto service class
         # name
         service = 'mysupperdupperservice'
+
+# Note that you can also directly specify which regions
+# and default region your Pool should register as a default:
+>>> class MySelectivePool(ServicePool):
+    service = {
+        'mysupperdupperservice': {
+            'regions': ['us-east-1', 'eu-west-1'],
+            'default_region': 'us-west-1',
+        }
+    }
 ```
 
 Then you can instantiate it and use it as any other mangrove ServicePool subclasses:
