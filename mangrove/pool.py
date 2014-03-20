@@ -60,10 +60,10 @@ class ServicePool(object):
 
     def __init__(self, connect=False, regions=None, default_region=None,
                  aws_access_key_id=None, aws_secret_access_key=None):
-        self.service_declaration = ServiceDeclaration(self.service)
-        self.service_declaration.regions = regions
-        self.service_declaration.default_region = default_region
-        self.module = self.service_declaration.module
+        self._service_declaration = ServiceDeclaration(self.service)
+        self._service_declaration.regions = regions
+        self._service_declaration.default_region = default_region
+        self.module = self._service_declaration.module
 
         self._executor = ThreadPoolExecutor(max_workers=cpu_count())
         self._connections = ConnectionsMapping()
@@ -94,7 +94,7 @@ class ServicePool(object):
         """
         # For performances reasons, every regions connections are
         # made concurrently through the concurent.futures library.
-        for region in self.service_declaration.regions:
+        for region in self._service_declaration.regions:
             self._connections[region] = self._executor.submit(
                 self._connect_module_to_region,
                 region,
@@ -103,7 +103,7 @@ class ServicePool(object):
             )
 
         if self._default_region is not None:
-            self._connections.default = self.service_declaration.default_region
+            self._connections.default = self._service_declaration.default_region
 
     def _connect_module_to_region(self, region, aws_access_key_id=None,
                                   aws_secret_access_key=None):
@@ -149,7 +149,7 @@ class ServicePool(object):
         """
         region_client = self._connect_module_to_region(region_name)
         self._connections[region_name] = region_client
-        self.service_declaration.regions.append(region_name)
+        self._service_declaration.regions.append(region_name)
 
 class ServiceMixinPool(object):
     """Multiple AWS services connection pool wrapper class
@@ -210,7 +210,7 @@ class ServiceMixinPool(object):
     def __init__(self, connect=False,
                  aws_access_key_id=None, aws_secret_access_key=None):
         self._executor = ThreadPoolExecutor(max_workers=cpu_count())
-        self.services_declaration = ServicePoolDeclaration(self.services)
+        self._services_declaration = ServicePoolDeclaration(self.services)
         self._services_store = {}
 
         self._load_services(connect)
@@ -234,7 +234,7 @@ class ServiceMixinPool(object):
                                     environment)
         :type   aws_secret_access_key: string
         """
-        for service_name, localisation in self.services_declaration.iteritems():
+        for service_name, localisation in self._services_declaration.iteritems():
             self.add_service(
                 service_name,
                 connect=connect,
@@ -285,10 +285,10 @@ class ServiceMixinPool(object):
 
         if service_name not in self._services_store:
             self._services_store[service_name] = service_pool_instance
-        if service_name not in self.services_declaration:
-            self.services_declaration[service_name].regions = regions or '*'
+        if service_name not in self._services_declaration:
+            self._services_declaration[service_name].regions = regions or '*'
             if default_region is not None:
-                self.services_declaration[service_name].default_region = default_region
+                self._services_declaration[service_name].default_region = default_region
 
         return service_pool_instance
 

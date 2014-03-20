@@ -40,22 +40,22 @@ class TestServicePool(unittest.TestCase):
 
     def test_pool_regions_are_set_according_to_init_params(self):
         pool = DummyS3Pool(connect=False, regions=['us-east-1', 'eu-west-1'])
-        self.assertEqual(pool.service_declaration.regions, ['us-east-1', 'eu-west-1'])
+        self.assertEqual(pool._service_declaration.regions, ['us-east-1', 'eu-west-1'])
         self.assertEqual(pool._connections.keys(), [])
 
     @mock_s3
     def test_pool_regions_are_connected_according_to_init_params(self):
         pool = DummyS3Pool(connect=True, regions=['us-east-1', 'eu-west-1'])
-        self.assertEqual(pool.service_declaration.regions, ['us-east-1', 'eu-west-1'])
+        self.assertEqual(pool._service_declaration.regions, ['us-east-1', 'eu-west-1'])
         self.assertEqual(pool._connections.keys(), ['us-east-1', 'eu-west-1'])
 
     @mock_s3
     def test_add_region_actually_sets_up_region_connection(self):
         pool = DummyS3Pool(connect=True, regions=['us-east-1'])
-        self.assertEqual(pool.service_declaration.regions, ['us-east-1'])
+        self.assertEqual(pool._service_declaration.regions, ['us-east-1'])
 
         pool.add_region('eu-west-1')
-        self.assertEqual(pool.service_declaration.regions, ['us-east-1', 'eu-west-1'])
+        self.assertEqual(pool._service_declaration.regions, ['us-east-1', 'eu-west-1'])
         self.assertTrue(isinstance(pool._connections['eu-west-1'], S3Connection))
 
 
